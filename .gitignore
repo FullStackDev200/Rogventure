@@ -1,0 +1,18 @@
+# Build artifacts
+build/
+out/
+*.o
+*.a
+*.so
+*.exe
+
+# Clangd / tooling
+compile_commands.json
+.cache/
+.clangd/
+
+# Editors
+.vscode/
+.idea/
+.nvim/
+
