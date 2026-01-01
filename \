@@ -11,10 +11,10 @@
 
 
 Cell* makeCell(float x1, float y1, float x2, float y2) {
-  Cell* c = malloc(sizeof(Cell));
-  c->x1 = x1; c->y1 = y1; c->x2 = x2; c->y2 = y2;
-  c->left = NULL; c->right = NULL;
-  return c;
+    Cell* c = malloc(sizeof(Cell));
+    c->x1 = x1; c->y1 = y1; c->x2 = x2; c->y2 = y2;
+    c->left = NULL; c->right = NULL;
+    return c;
 }
 
 
@@ -60,62 +60,39 @@ bool devideCell(Cell* cell, uint8_t minCellSize){
   return false;
 }
 
+CellArray getLeaves(Cell* cell){
+  malloc(sizeof(cell))
 
-void getLeaves(Cell* cell, CellArray* cells) {
-    if (!cell) return;
-
-    if (cell->left) {
-        da_append(cells, cell);
-        return;
-    }
-
-    getLeaves(cell->left, cells);
-    getLeaves(cell->right, cells);
+  CellArray cells = {0};
+  if (cell->left == NULL){
+    da_append(&cells, cell);
+  } else {
+    getLeaves(cell->left);
+    getLeaves(cell->right);
+  }
+  return cells;
 }
 
-void findNeighbours(Map* map) {
-  getLeaves(&map->root, &map->cells);
+void findNeighbour(Cell* root){
+  CellArray cells = getLeaves(root);
 
-  for (size_t i = 0; i < map->cells.count; i++) {
+  for(size_t i = 0; i < cells->count; i++){
+    for(size_t j = 0; j < cells->count; j++){
+      if(i == j) continue; 
 
-    // ✅ ZERO-INIT neighbour arrays
-    map->cells.items[i]->hNeighbours = (CellArray){0};
-    map->cells.items[i]->vNeighbours = (CellArray){0};
-
-    for (size_t j = 0; j < map->cells.count; j++) {
-      if (i == j) continue;
-
-      if (MAX(map->cells.items[i]->y1, map->cells.items[j]->y1) <
-        MIN(map->cells.items[i]->y2, map->cells.items[j]->y2)) {
-        da_append(&map->cells.items[i]->hNeighbours, map->cells.items[j]);
+      // horizontal overlap
+      if(MAX(cells->items[i]->y1, cells->items[j]->y1) < MIN(cells->items[i]->y2, cells->items[j]->y2)){
+        da_append(&cells->items[i]->hNeighbours, j);
       }
 
-      if (MAX(map->cells.items[i]->x1, map->cells.items[j]->x1) <
-        MIN(map->cells.items[i]->x2, map->cells.items[j]->x2)) {
-        da_append(&map->cells.items[i]->vNeighbours, map->cells.items[j]);
+      // vertical overlap
+      if(MAX(cells->items[i]->x1, cells->items[j]->x1) < MIN(cells->items[i]->x2, cells->items[j]->x2)){
+        da_append(&cells->items[i]->vNeighbours, j);
       }
     }
   }
 }
 
-void shrinkCells(Cell* cell, uint8_t minCellSize){
-  if(cell->left!=NULL){
-    shrinkCells(cell->left, minCellSize);
-    shrinkCells(cell->right, minCellSize);
-  }
-
-  float w = cell->x2-cell->x1;
-  float h = cell->y2-cell->y1;
-  float newW = MAX(w*RANDBETWEEN(3,9)/10, minCellSize);
-  float newH = MAX(h*RANDBETWEEN(3,9)/10, minCellSize);
-
-  cell->x1 = cell->x1 + 0.5*(w-newW);
-  cell->x2 = cell->x2 - 0.5*(w-newW);
-  cell->y1 = cell->y1 + 0.5*(h-newH);
-  cell->y2 = cell->y2 - 0.5*(h-newH);
-}
-
-void add
 
 Map initMap(uint16_t margin, uint8_t numRooms, uint8_t minCellSize) {
   Map map = {
@@ -145,15 +122,9 @@ void devideMap(Map* map){
   }
 }
 
-void generateMap(Map* map) {
-  devideMap(map);
-  shrinkCells(&map->root, map->minCellSize);
-  findNeighbours(map);
-}
-
 
 void drawMap(Map* map) {
-  if (!map) return;
+    if (!map) return;
 
-  drawCell(&map->root);
+    drawCell(&map->root);
 }

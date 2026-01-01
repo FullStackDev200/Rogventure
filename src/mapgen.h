@@ -4,19 +4,22 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-typedef struct Cell Cell;
 
-struct Cell {
-  float x1, y1, x2, y2;
-  Cell *left;
-  Cell *right;
-};
+typedef struct Cell Cell;
 
 typedef struct {
   Cell **items;
   size_t count;
   size_t capacity;
 } CellArray;
+
+struct Cell {
+  float x1, y1, x2, y2;
+  Cell *left;
+  Cell *right;
+  CellArray hNeighbours;
+  CellArray vNeighbours;
+};
 
 typedef struct {
   Cell root;
@@ -31,6 +34,8 @@ void drawCell(Cell *cell);
 Map initMap(uint16_t margin, uint8_t numRooms, uint8_t minCellSize);
 void devideMap(Map *map);
 bool devideRoot(Cell root, uint8_t minCellSize);
+
+void generateMap(Map *map);
 void drawMap(Map *map);
 
 #endif // MAPGEN_H_

@@ -11,7 +11,7 @@ int main(void) {
   srand(time(NULL)); 
 
   Map map = initMap(30, 10, 10);
-  devideMap(&map);
+  generateMap(&map);
   
   while (!WindowShouldClose()) {
     BeginDrawing();
