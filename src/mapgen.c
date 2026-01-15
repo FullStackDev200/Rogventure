@@ -115,7 +115,6 @@ void shrinkCells(Cell* cell, uint8_t minCellSize){
   cell->y2 = cell->y2 - 0.5*(h-newH);
 }
 
-void add
 
 Map initMap(uint16_t margin, uint8_t numRooms, uint8_t minCellSize) {
   Map map = {
