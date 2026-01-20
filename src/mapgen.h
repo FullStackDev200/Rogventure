@@ -8,6 +8,19 @@
 typedef struct Cell Cell;
 
 typedef struct {
+  float x1;
+  float y1;
+  float x2;
+  float y2;
+} Hall;
+
+typedef struct {
+  Hall *items;
+  size_t count;
+  size_t capacity;
+} HallArray;
+
+typedef struct {
   Cell **items;
   size_t count;
   size_t capacity;
@@ -19,6 +32,8 @@ struct Cell {
   Cell *right;
   CellArray hNeighbours;
   CellArray vNeighbours;
+  HallArray hHalls;
+  HallArray vHalls;
 };
 
 typedef struct {

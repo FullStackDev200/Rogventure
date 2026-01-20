@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <math.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -14,9 +15,16 @@ Cell* makeCell(float x1, float y1, float x2, float y2) {
   Cell* c = malloc(sizeof(Cell));
   c->x1 = x1; c->y1 = y1; c->x2 = x2; c->y2 = y2;
   c->left = NULL; c->right = NULL;
+
+  c->hHalls = (HallArray){0};
+  c->vHalls = (HallArray){0};
   return c;
 }
 
+
+void drawHall(Hall* hall){
+  DrawRectangleLines(hall->x1, hall->y1, hall->x2 - hall->x1, hall->y2 - hall->y1, YELLOW);
+}
 
 void drawCell(Cell* cell){
   if(cell->left != NULL){
@@ -28,6 +36,18 @@ void drawCell(Cell* cell){
       1,
       GREEN
     );
+
+    // Draw horizontal halls
+    if(cell->hHalls.items) {
+      for(size_t i = 0; i < cell->hHalls.count; i++)
+        drawHall(&cell->hHalls.items[i]);
+    }
+
+    // Draw vertical halls
+    if(cell->vHalls.items) {
+      for(size_t i = 0; i < cell->vHalls.count; i++)
+        drawHall(&cell->vHalls.items[i]);
+    }
   }
 }
 
@@ -64,35 +84,39 @@ bool devideCell(Cell* cell, uint8_t minCellSize){
 void getLeaves(Cell* cell, CellArray* cells) {
     if (!cell) return;
 
-    if (cell->left) {
+    if (cell->left != NULL) {
+        getLeaves(cell->left, cells);
+        getLeaves(cell->right, cells);
+    } else {
         da_append(cells, cell);
-        return;
     }
-
-    getLeaves(cell->left, cells);
-    getLeaves(cell->right, cells);
 }
+
+#define EPSILON 0.01f
 
 void findNeighbours(Map* map) {
   getLeaves(&map->root, &map->cells);
 
   for (size_t i = 0; i < map->cells.count; i++) {
 
-    // ✅ ZERO-INIT neighbour arrays
     map->cells.items[i]->hNeighbours = (CellArray){0};
     map->cells.items[i]->vNeighbours = (CellArray){0};
 
     for (size_t j = 0; j < map->cells.count; j++) {
       if (i == j) continue;
 
-      if (MAX(map->cells.items[i]->y1, map->cells.items[j]->y1) <
-        MIN(map->cells.items[i]->y2, map->cells.items[j]->y2)) {
-        da_append(&map->cells.items[i]->hNeighbours, map->cells.items[j]);
+      if (fabs(map->cells.items[i]->x2 - map->cells.items[j]->x1) < EPSILON) {
+        if (MAX(map->cells.items[i]->y1, map->cells.items[j]->y1) <
+          MIN(map->cells.items[i]->y2, map->cells.items[j]->y2)) {
+          da_append(&map->cells.items[i]->hNeighbours, map->cells.items[j]);
+        }
       }
 
-      if (MAX(map->cells.items[i]->x1, map->cells.items[j]->x1) <
-        MIN(map->cells.items[i]->x2, map->cells.items[j]->x2)) {
-        da_append(&map->cells.items[i]->vNeighbours, map->cells.items[j]);
+      if (fabs(map->cells.items[i]->y2 - map->cells.items[j]->y1) < EPSILON) {
+        if (MAX(map->cells.items[i]->x1, map->cells.items[j]->x1) <
+          MIN(map->cells.items[i]->x2, map->cells.items[j]->x2)) {
+          da_append(&map->cells.items[i]->vNeighbours, map->cells.items[j]);
+        }
       }
     }
   }
@@ -115,6 +139,42 @@ void shrinkCells(Cell* cell, uint8_t minCellSize){
   cell->y2 = cell->y2 - 0.5*(h-newH);
 }
 
+void makeHalls(Map* map) {
+  for (size_t i = 0; i < map->cells.count; i++) {
+    Cell *cell = map->cells.items[i];
+
+    cell->hHalls = (HallArray){0};
+    cell->vHalls = (HallArray){0};
+
+    // Horizontal halls
+    for (size_t j = 0; j < cell->hNeighbours.count; j++) {
+      Cell *neighbour = cell->hNeighbours.items[j];
+
+      float y_min = MAX(cell->y1, neighbour->y1);
+      float y_max = MIN(cell->y2, neighbour->y2) - map->minCellSize;
+
+      if (y_max > y_min) {
+        float y = RANDBETWEENF(y_min, y_max);
+        Hall hall = { cell->x2, y, neighbour->x1, y + map->minCellSize };
+        da_append(&cell->hHalls, hall);
+      }
+    }
+
+    // Vertical halls
+    for (size_t j = 0; j < cell->vNeighbours.count; j++) {
+      Cell *neighbour = cell->vNeighbours.items[j];
+
+      float x_min = MAX(cell->x1, neighbour->x1);
+      float x_max = MIN(cell->x2, neighbour->x2) - map->minCellSize;
+
+      if (x_max > x_min) {
+        float x = RANDBETWEENF(x_min, x_max);
+        Hall hall = { x, cell->y2, x + map->minCellSize, neighbour->y1 };
+        da_append(&cell->vHalls, hall);
+      }
+    }
+  }
+}
 
 Map initMap(uint16_t margin, uint8_t numRooms, uint8_t minCellSize) {
   Map map = {
@@ -146,8 +206,9 @@ void devideMap(Map* map){
 
 void generateMap(Map* map) {
   devideMap(map);
-  shrinkCells(&map->root, map->minCellSize);
   findNeighbours(map);
+  shrinkCells(&map->root, map->minCellSize);
+  makeHalls(map);
 }
 
 

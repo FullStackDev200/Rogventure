@@ -12,10 +12,14 @@ ifeq ($(OS),Windows_NT)
 else
     RAYLIB_DIR := ./libs/raylib-5.5_linux_amd64
     CFLAGS  += -I$(RAYLIB_DIR)/include
-    LDFLAGS += -L$(RAYLIB_DIR)/lib
-    LDLIBS  += -lraylib -lGL -lm -lpthread -ldl -lrt
+    # Using the absolute/relative path to the .a file directly
+    LIBRAYLIB := $(RAYLIB_DIR)/lib/libraylib.a
+    LDLIBS  += $(LIBRAYLIB) -lGL -lm -lpthread -ldl -lrt
 endif
 
+# Ensure the output is rebuilt if the source or the library changes
 $(OUT): $(SRC)
-	$(CC) $(SRC) -o $@ $(CFLAGS) $(LDFLAGS) $(LDLIBS)
-main: 
+	$(CC) $(SRC) -o $(OUT) $(CFLAGS) $(LDFLAGS) $(LDLIBS)
+
+clean:
+	rm -f $(OUT)
