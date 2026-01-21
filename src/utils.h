@@ -42,6 +42,8 @@
 #define UNUSED(value) (void)(value)
 
 #define RANDBETWEEN(min, max) (rand() % ((max) - (min) + 1) + (min))
+#define RANDBETWEENF(min, max)                                                 \
+  (rand() % ((int)(max) - (int)(min) + 1) + (int)(min))
 
 #define TODO(message)                                                          \
   do {                                                                         \

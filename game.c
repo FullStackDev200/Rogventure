@@ -3,6 +3,8 @@
 #include "./src/mapgen.c"
 #include "./src/utils.h"
 
+#define ROOMNUMBER  10
+#define MINCELLSIZE  10
 
 int main(void) {
   InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Rogventure");
@@ -10,7 +12,7 @@ int main(void) {
 
   srand(time(NULL)); 
 
-  Map map = initMap(30, 10, 10);
+  Map map = initMap(30, ROOMNUMBER, MINCELLSIZE);
   generateMap(&map);
   
   while (!WindowShouldClose()) {
