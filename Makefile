@@ -2,6 +2,8 @@ CC := gcc
 SRC := game.c
 OUT := game
 
+.PHONY: $(OUT)
+
 CFLAGS += -Wall -Wextra
 
 ifeq ($(OS),Windows_NT)
@@ -18,7 +20,7 @@ else
 endif
 
 # Ensure the output is rebuilt if the source or the library changes
-$(OUT): $(SRC)
+$(OUT):
 	$(CC) $(SRC) -o $(OUT) $(CFLAGS) $(LDFLAGS) $(LDLIBS)
 
 clean:

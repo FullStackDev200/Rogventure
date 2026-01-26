@@ -10,6 +10,23 @@
 #include "./mapgen.h"
 #include "./utils.h"
 
+#define SNAPTOGRID true
+
+void addGrid(){
+  if (SNAPTOGRID){ 
+    for(size_t x=0; x < WINDOW_WIDTH; x+=CELLSIZE){
+      DrawLine(x,0,x,WINDOW_HEIGHT, BLUE);
+    }
+
+    for(size_t y=0; y < WINDOW_HEIGHT; y+=CELLSIZE){
+      DrawLine(0,y,WINDOW_WIDTH,y, BLUE);
+    }
+  }
+}
+
+int snapCoords(float x){
+  return(round(x/CELLSIZE)*CELLSIZE);
+}
 
 Cell* makeCell(float x1, float y1, float x2, float y2) {
   Cell* c = malloc(sizeof(Cell));
@@ -21,9 +38,45 @@ Cell* makeCell(float x1, float y1, float x2, float y2) {
   return c;
 }
 
+void snapToGrid(CellArray *cells)
+{
+  for (size_t i=0; i<cells->count; i++) {
+    Cell *cell = cells->items[i];
+
+    cell->x1 = snapCoords(cell->x1);
+    cell->x2 = snapCoords(cell->x2);
+    cell->y1 = snapCoords(cell->y1);
+    cell->y2 = snapCoords(cell->y2);
+
+
+
+    for (size_t j = 0; j < cell->vHalls.count; j++) {
+      Hall *vHall = &cell->vHalls.items[j];  
+
+      vHall->x1 = snapCoords(vHall->x1);
+      vHall->x2 = snapCoords(vHall->x2);
+      vHall->y1 = snapCoords(vHall->y1);
+      vHall->y2 = snapCoords(vHall->y2);
+    }
+
+    for (size_t j = 0; j < cell->hHalls.count; j++) {
+      Hall *hHall = &cell->hHalls.items[j]; 
+
+      hHall->x1 = snapCoords(hHall->x1);
+      hHall->x2 = snapCoords(hHall->x2);
+      hHall->y1 = snapCoords(hHall->y1);
+      hHall->y2 = snapCoords(hHall->y2);
+    }
+  }
+}
 
 void drawHall(Hall* hall){
-  DrawRectangleLines(hall->x1, hall->y1, hall->x2 - hall->x1, hall->y2 - hall->y1, YELLOW);
+  int x = MIN(hall->x1, hall->x2);
+  int y = MIN(hall->y1, hall->y2);
+  int w = hall->x2 - hall->x1;
+  int h = hall->y2 - hall->y1;
+
+  DrawRectangleLines(x, y, w, h, YELLOW);
 }
 
 void drawCell(Cell* cell){
@@ -82,14 +135,14 @@ bool devideCell(Cell* cell, uint8_t minCellSize){
 
 
 void getLeaves(Cell* cell, CellArray* cells) {
-    if (!cell) return;
+  if (!cell) return;
 
-    if (cell->left != NULL) {
-        getLeaves(cell->left, cells);
-        getLeaves(cell->right, cells);
-    } else {
-        da_append(cells, cell);
-    }
+  if (cell->left != NULL) {
+    getLeaves(cell->left, cells);
+    getLeaves(cell->right, cells);
+  } else {
+    da_append(cells, cell);
+  }
 }
 
 #define EPSILON 0.01f
@@ -209,11 +262,16 @@ void generateMap(Map* map) {
   findNeighbours(map);
   shrinkCells(&map->root, map->minCellSize);
   makeHalls(map);
+
+  if (SNAPTOGRID){ 
+    snapToGrid(&map->cells);
+  }
 }
 
 
 void drawMap(Map* map) {
   if (!map) return;
 
+  addGrid();
   drawCell(&map->root);
 }
